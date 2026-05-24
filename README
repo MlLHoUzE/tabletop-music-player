@@ -1,0 +1,23 @@
+# TTRPG Background Music Player (Obsidian Plugin)
+
+A compact, zero-friction audio controller designed for running live TTRPG sessions from a centralized session prep note. It decouples audio logic from the UI views to maintain persistent background playback while navigating separate notes, NPC sheets, and stat blocks.
+
+## Core Features
+
+- **Persistent Playback**: Decoupled HTML5 audio architecture continues playing in the background when active notes are switched or closed.
+- **Dual-Channel Crossfading**: Automatically blends track transitions smoothly over a 2.5-second cinematic window.
+- **Dual-Channel Mixer**: Independent volume tracking sliders for the main Music track and looping Environmental Weather layers.
+- **Tactical Filter Matrix**: 13-button compact grid targeting **Biome**, **Tone**, and **Intensity** properties.
+- **Automated Queues**: Property filters automatically apply a Fisher-Yates random shuffle to matching tracks; hardcoded playlist notes play strictly in order.
+- **Inline Click-to-Play**: Markdown post-processor transforms custom URIs into functional text buttons natively within your prep notes.
+- **Global Hotkeys**: Registers core actions (`Play`, `Pause`, `Skip`, `Panic Stop`) into Obsidian's native Hotkey manager.
+- **Performance Scoped**: Scans are bounded strictly to a root folder named `Jukebox/` to maintain lightning-fast execution in large vaults.
+
+## Development Setup
+
+1. Overwrite your `package.json` with the required compilation libraries (`esbuild`, `typescript`).
+2. Run `npm install` to download dependencies.
+3. Update the `package.json` output path script to point straight to your active vault:
+   `--outfile="C:/YourVault/.obsidian/plugins/obsidian-ttrpg-music/main.js"`
+4. Execute `npm run dev` to watch your workspace and auto-compile on save.
+5. Hit `Ctrl + R` inside Obsidian to flush the layout and update active logic.
