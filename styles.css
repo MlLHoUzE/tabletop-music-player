@@ -1,154 +1,153 @@
 /* Single-line layout for the Now Playing card */
 .ttrpg-now-playing-card {
-    padding: 6px 10px;
-    background: var(--background-secondary);
-    border-radius: 4px;
-    margin-bottom: 8px;
-    font-size: 0.85em;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  padding: 6px 10px;
+  background: var(--background-secondary);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 0.85em;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ttrpg-track-title-display {
-    font-style: italic;
-    color: var(--text-muted);
+  font-style: italic;
+  color: var(--text-muted);
 }
 
 /* Tightly pack player controls */
 .ttrpg-controls-row {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 8px;
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
 }
 
 .ttrpg-controls-row button {
-    padding: 4px 8px;
-    font-size: 0.85em;
-    flex-grow: 1;
+  padding: 4px 8px;
+  font-size: 0.85em;
+  flex-grow: 1;
 }
 
 /* Squeeze mixing panel padding */
 .ttrpg-mixer-panel {
-    background: var(--background-secondary-alt);
-    padding: 6px 8px;
-    border-radius: 4px;
-    margin-bottom: 10px;
+  background: var(--background-secondary-alt);
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
 }
 
 .ttrpg-slider-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .ttrpg-slider-row:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .ttrpg-slider-label {
-    font-size: 0.75em;
-    font-weight: bold;
-    width: 80px;
-    color: var(--text-muted);
-    white-space: nowrap;
+  font-size: 0.75em;
+  font-weight: bold;
+  width: 80px;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .ttrpg-slider-row input[type="range"] {
-    flex-grow: 1;
-    margin-left: 4px;
+  flex-grow: 1;
+  margin-left: 4px;
 }
 
 /* Remove wasted white space above headers */
 .ttrpg-view-container h5 {
-    margin: 8px 0 4px 0 !important;
-    font-size: 0.8em;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-normal);
+  margin: 8px 0 4px 0 !important;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-normal);
 }
 
 .ttrpg-divider-spaced {
-    margin: 8px 0 !important;
-    border: 0;
-    border-top: 1px solid var(--background-modifier-border);
+  margin: 8px 0 !important;
+  border: 0;
+  border-top: 1px solid var(--background-modifier-border);
 }
 
 /* Squeeze button grids tightly together */
 .ttrpg-matrix-section {
-    margin-bottom: 6px;
+  margin-bottom: 6px;
 }
 
 .ttrpg-matrix-title {
-    display: block;
-    margin-bottom: 2px;
-    font-weight: bold;
-    color: var(--text-muted);
-    font-size: 0.75em;
+  display: block;
+  margin-bottom: 2px;
+  font-weight: bold;
+  color: var(--text-muted);
+  font-size: 0.75em;
 }
 
 .ttrpg-matrix-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
 }
 
 .ttrpg-matrix-btn {
-    padding: 3px 6px;
-    font-size: 11px;
-    cursor: pointer;
-    line-height: 1.2;
+  padding: 3px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  line-height: 1.2;
 }
 
 /* Tighten the Playlist Input Row */
 .ttrpg-full-width-input {
-    width: 100%;
-    margin-bottom: 4px;
-    padding: 4px;
-    font-size: 0.85em;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 4px;
+  font-size: 0.85em;
 }
 
 .ttrpg-full-width-btn {
-    width: 100%;
-    padding: 4px;
-    font-size: 0.85em;
+  width: 100%;
+  padding: 4px;
+  font-size: 0.85em;
 }
 
 .ttrpg-button-container {
-    display: flex;
-    gap: 4px;
-    margin-top: 6px;
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .ttrpg-button-container button {
-    flex-grow: 1;
-    padding: 4px;
-    font-size: 0.85em;
+  flex-grow: 1;
+  padding: 4px;
+  font-size: 0.85em;
 }
 
 /* Style custom music links as sleek, interactive inline buttons */
 a.ttrpg-inline-command-btn {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--background-secondary-alt);
-    color: var(--text-accent) !important;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 4px;
-    padding: 2px 6px;
-    margin: 0 2px;
-    font-size: 0.9em;
-    font-weight: 500;
-    text-decoration: none !important;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--background-secondary-alt);
+  color: var(--text-accent) !important;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 0 2px;
+  font-size: 0.9em;
+  font-weight: 500;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 a.ttrpg-inline-command-btn:hover {
-    background-color: var(--background-modifier-hover);
-    color: var(--text-accent-hover) !important;
+  background-color: var(--background-modifier-hover);
+  color: var(--text-accent-hover) !important;
 }
-
