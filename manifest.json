@@ -6,5 +6,6 @@
   "description": "Plays ambient TTRPG music tracks in the background using note front matter.",
   "author": "Ryan Hammond",
   "authorUrl": "https://github.com/MlLHoUzE/TTRPG-Music-Player",
-  "isDesktopOnly": true
+  "isDesktopOnly": true,
+  "hasSettings": true
 }

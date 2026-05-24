@@ -1,11 +1,34 @@
-import { App, Plugin, WorkspaceLeaf, Notice } from "obsidian";
+import { App, Plugin, WorkspaceLeaf, Notice, PluginSettingTab } from "obsidian";
 
 export const VIEW_TYPE_TTRPG_MUSIC = "ttrpg-music-view";
 
+export interface WeatherOverlayConfig {
+  name: string;
+  filePath: string;
+}
+
+export interface TTRPGMusicPlayerSettings {
+  audioFolder: string;
+  weatherOverlays: WeatherOverlayConfig[];
+  crossfadeDuration: number;
+}
+
+export const DEFAULT_SETTINGS: TTRPGMusicPlayerSettings = {
+  audioFolder: "Jukebox",
+  weatherOverlays: [
+    { name: "🌧️ Rain", filePath: "Jukebox/Ambience/Soft_Rain.mp3" },
+    { name: "⛈️ Storm", filePath: "Jukebox/Ambience/Heavy_Storm.wav" },
+  ],
+  crossfadeDuration: 2.5,
+};
+
 export class TrackManager {
   private app: App;
-  constructor(app: App) {
+  private plugin: TTRPGMusicPlayerPlugin;
+
+  constructor(app: App, plugin: TTRPGMusicPlayerPlugin) {
     this.app = app;
+    this.plugin = plugin;
   }
 
   /**
@@ -19,9 +42,11 @@ export class TrackManager {
     const audioTracks: string[] = [];
     const files = this.app.vault.getMarkdownFiles();
 
+    const folderPrefix = this.plugin.settings.audioFolder + "/";
+
     for (const file of files) {
       // PERFORMANCE SHIELD: Skip any file that isn't inside your Jukebox directory 🛡️
-      if (!file.path.startsWith("Jukebox/")) continue;
+      if (!file.path.startsWith(folderPrefix)) continue;
 
       const cache = this.app.metadataCache.getFileCache(file);
       const frontmatter = cache?.frontmatter;
@@ -68,9 +93,11 @@ export class TrackManager {
     const targetId = playlistId.toLowerCase().trim();
     const files = this.app.vault.getMarkdownFiles();
 
+    const folderPrefix = this.plugin.settings.audioFolder + "/";
+
     for (const file of files) {
       // PERFORMANCE SHIELD: Skip any file that isn't inside your Jukebox directory 🛡️
-      if (!file.path.startsWith("Jukebox/")) continue;
+      if (!file.path.startsWith(folderPrefix)) continue;
 
       const cache = this.app.metadataCache.getFileCache(file);
       const frontmatter = cache?.frontmatter;
@@ -109,7 +136,7 @@ export class HTML5AudioController {
   private currentTrackIndex: number = 0;
   private masterMusicVolume: number = 0.7; // Stores user mix level from slider
   private crossfadeDurationMs: number = 2500; // 2.5 second cinematic blend
-  private fadeIntervalId: unknown = null;
+  private fadeIntervalId: ReturnType<typeof setInterval> | null = null;
 
   // Independent Looping Environmental Weather Overlay Channel 🌧️
   private weatherAudio: HTMLAudioElement;
@@ -209,8 +236,10 @@ export class HTML5AudioController {
 
           // Once the duration window expires, clear state loops completely
           if (currentStep >= totalSteps) {
-            clearInterval(this.fadeIntervalId);
-            this.fadeIntervalId = null;
+            if (this.fadeIntervalId !== null) {
+              clearInterval(this.fadeIntervalId);
+              this.fadeIntervalId = null;
+            }
 
             // Park the faded element safely
             oldChannel.pause();
@@ -296,7 +325,10 @@ export class HTML5AudioController {
   }
 
   public destroy() {
-    if (this.fadeIntervalId) clearInterval(this.fadeIntervalId);
+    if (this.fadeIntervalId !== null) {
+      clearInterval(this.fadeIntervalId);
+      this.fadeIntervalId = null;
+    }
     this.channel1.pause();
     this.channel2.pause();
     this.weatherAudio.pause();
@@ -306,13 +338,18 @@ export class HTML5AudioController {
   }
 }
 
-export default class TTRPGMusicPlugin extends Plugin {
+export default class TTRPGMusicPlayerPlugin extends Plugin {
   public audioPlayer!: HTML5AudioController;
   public trackManager!: TrackManager;
+  public settings!: TTRPGMusicPlayerSettings;
 
   async onload() {
+    await this.loadSettings();
+
     this.audioPlayer = new HTML5AudioController(this.app);
-    this.trackManager = new TrackManager(this.app);
+    this.trackManager = new TrackManager(this.app, this);
+
+    this.addSettingTab(new TTRPGMusicPlayerSettingTab(this.app, this));
 
     // Register the sidebar panel view container
     this.registerView(
@@ -466,12 +503,20 @@ export default class TTRPGMusicPlugin extends Plugin {
       workspace.revealLeaf(leaf);
     }
   }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 }
 
 import { ItemView } from "obsidian";
 
 export class TTRPGMusicView extends ItemView {
-  private plugin: TTRPGMusicPlugin;
+  private plugin: TTRPGMusicPlayerPlugin;
 
   // Hardcoded tactical values for instant gameplay buttons
   private biomes = ["Forest", "Marine", "Highlands", "Dungeon", "Settlement"];
@@ -482,7 +527,7 @@ export class TTRPGMusicView extends ItemView {
   private selectedTone: string | null = null;
   private selectedIntensity: string | null = null;
 
-  constructor(leaf: WorkspaceLeaf, plugin: TTRPGMusicPlugin) {
+  constructor(leaf: WorkspaceLeaf, plugin: TTRPGMusicPlayerPlugin) {
     super(leaf);
     this.plugin = plugin;
   }
@@ -619,37 +664,21 @@ export class TTRPGMusicView extends ItemView {
 
     container.createEl("hr", { cls: "ttrpg-divider-spaced" });
 
+    container.createEl("hr", { cls: "ttrpg-divider-spaced" });
+
     // --- WEATHER LAYER OVERLAYS CONTROLLER ---
     container.createEl("h5", { text: "Weather Overlays" });
     const weatherGrid = container.createEl("div", { cls: "ttrpg-matrix-row" });
 
-    // Replace the hardcoded paths in rainBtn and stormBtn with this safe check:
-    const findWeatherFile = (basePath: string): string => {
-      // Checks for standard audio formats in your vault
-      const extensions = [".mp3", ".wav", ".ogg", ".m4a"];
-      for (const ext of extensions) {
-        const fullPath = basePath + ext;
-        if (this.app.vault.getAbstractFileByPath(fullPath)) {
-          return fullPath;
-        }
-      }
-      return basePath + ".mp3"; // Fallback default
-    };
-
+    // 1. ALWAYS render the "Clear" button first ☀️
     const clearBtn = weatherGrid.createEl("button", {
       text: "☀️ Clear",
       cls: "ttrpg-matrix-btn mod-cta",
     }) as HTMLButtonElement;
-    const rainBtn = weatherGrid.createEl("button", {
-      text: "🌧️ Rain",
-      cls: "ttrpg-matrix-btn",
-    }) as HTMLButtonElement;
-    const stormBtn = weatherGrid.createEl("button", {
-      text: "⛈️ Storm",
-      cls: "ttrpg-matrix-btn",
-    }) as HTMLButtonElement;
 
-    const weatherBtns = [clearBtn, rainBtn, stormBtn];
+    // Keep a tracking list of buttons to toggle highlights
+    const weatherBtns: HTMLButtonElement[] = [clearBtn];
+
     const setWeatherActive = (activeBtn: HTMLButtonElement) => {
       weatherBtns.forEach((btn) => btn.classList.remove("mod-cta"));
       activeBtn.classList.add("mod-cta");
@@ -660,18 +689,28 @@ export class TTRPGMusicView extends ItemView {
       this.plugin.audioPlayer.stopWeatherOverlay();
     });
 
-    this.registerDomEvent(rainBtn, "click", () => {
-      setWeatherActive(rainBtn);
-      this.plugin.audioPlayer.startWeatherOverlay(
-        findWeatherFile("Jukebox/Ambience/Soft_Rain"),
-      );
-    });
+    // 2. Dynamically loop through and generate your custom user buttons 🪄
+    this.plugin.settings.weatherOverlays.forEach((overlay) => {
+      if (!overlay.name.trim()) return; // Skip unnamed buttons
 
-    this.registerDomEvent(stormBtn, "click", () => {
-      setWeatherActive(stormBtn);
-      this.plugin.audioPlayer.startWeatherOverlay(
-        findWeatherFile("Jukebox/Ambience/Heavy_Storm"),
-      );
+      const btn = weatherGrid.createEl("button", {
+        text: overlay.name,
+        cls: "ttrpg-matrix-btn",
+      }) as HTMLButtonElement;
+      weatherBtns.push(btn);
+
+      this.registerDomEvent(btn, "click", () => {
+        setWeatherActive(btn);
+
+        if (!overlay.filePath.trim()) {
+          new Notice(
+            "❌ Error: No file path defined for this weather setting.",
+          );
+          return;
+        }
+
+        this.plugin.audioPlayer.startWeatherOverlay(overlay.filePath);
+      });
     });
 
     container.createEl("hr", { cls: "ttrpg-divider-spaced" });
@@ -735,5 +774,215 @@ export class TTRPGMusicView extends ItemView {
       });
       btnRefs.push(btn);
     });
+  }
+}
+
+import { Setting } from "obsidian";
+
+export class TTRPGMusicPlayerSettingTab extends PluginSettingTab {
+  plugin: TTRPGMusicPlayerPlugin;
+
+  constructor(app: App, plugin: TTRPGMusicPlayerPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display(): void {
+    const { containerEl } = this;
+    containerEl.empty();
+
+    containerEl.createEl("h2", { text: "TTRPG Music Player Settings" });
+
+    // --- RENDER TEXT BOX WITH DROPDOWN SEARCH SUGGESTIONS ---
+    new Setting(containerEl)
+      .setName("Audio Folder Root Location")
+      .setDesc(
+        "Type to filter your vault folders and choose your primary Jukebox home directory.",
+      )
+      .addSearch((search) => {
+        search
+          .setPlaceholder("e.g., Jukebox or Audio/Music")
+          .setValue(this.plugin.settings.audioFolder)
+          .onChange(async (value) => {
+            // Keep track of changes and save to disk automatically
+            this.plugin.settings.audioFolder = value.trim().replace(/\/$/, "");
+            await this.plugin.saveSettings();
+          });
+
+        // Attach your filter suggest engine to the text input box's underlying HTML element 👇
+        new FolderSuggest(this.app, search.inputEl);
+      });
+
+    containerEl.createEl("h4", { text: "Environmental Weather Audio Paths" });
+
+    this.plugin.settings.weatherOverlays.forEach((overlay, index) => {
+      const s = new Setting(containerEl)
+        .addText((text) =>
+          text
+            .setPlaceholder("Button Name (e.g. 🌧️ Rain)")
+            .setValue(overlay.name)
+            .onChange(async (val) => {
+              this.plugin.settings.weatherOverlays[index].name = val;
+              await this.plugin.saveSettings();
+            }),
+        )
+        // 1. Change this text input container into a sleek search layout box 👇
+        .addSearch((search) => {
+          search
+            .setPlaceholder("Search or enter track path...")
+            .setValue(overlay.filePath)
+            .onChange(async (val) => {
+              this.plugin.settings.weatherOverlays[index].filePath = val.trim();
+              await this.plugin.saveSettings();
+            });
+
+          // 2. Attach your fresh audio file search layer directly to the input node! 🎧
+          new AudioFileSuggest(this.app, search.inputEl);
+        })
+        .addButton((btn) =>
+          btn
+            .setButtonText("❌ Delete")
+            .setWarning()
+            .onClick(async () => {
+              this.plugin.settings.weatherOverlays.splice(index, 1);
+              await this.plugin.saveSettings();
+              this.display();
+            }),
+        );
+
+      s.settingEl.style.borderTop = "none";
+      s.settingEl.style.padding = "4px 0";
+    });
+
+    // Add New Weather Overlay Button
+    containerEl.createEl("br");
+    new Setting(containerEl).addButton((btn) =>
+      btn
+        .setButtonText("➕ Add Custom Weather")
+        .setCta()
+        .onClick(async () => {
+          this.plugin.settings.weatherOverlays.push({
+            name: "New State",
+            filePath: "",
+          });
+          await this.plugin.saveSettings();
+          this.display();
+        }),
+    );
+    // --- CROSSFADE DURATION INPUT CONFIG ---
+    new Setting(containerEl)
+      .setName("Crossfade Blend Duration (Seconds)")
+      .setDesc(
+        "Adjust how many seconds audio tracks overlay and blend together when shifting scenes (Type 0 for instant cuts).",
+      )
+      .addText((text) => {
+        text.inputEl.type = "number"; // Enforce numeric keyboard constraints
+        text.inputEl.setAttribute("step", "0.5"); // Allow increments of 0.5s
+        text.inputEl.setAttribute("min", "0"); // Block negative numbers
+
+        text
+          .setPlaceholder("2.5")
+          .setValue(String(this.plugin.settings.crossfadeDuration))
+          .onChange(async (value) => {
+            const parsedValue = parseFloat(value);
+            // Fallback to 0 if the field is wiped completely empty
+            this.plugin.settings.crossfadeDuration = isNaN(parsedValue)
+              ? 0
+              : parsedValue;
+            await this.plugin.saveSettings();
+          });
+      });
+  }
+}
+
+import { AbstractInputSuggest } from "obsidian";
+
+export class FolderSuggest extends AbstractInputSuggest<string> {
+  private inputEl: HTMLInputElement;
+
+  constructor(app: App, inputEl: HTMLInputElement) {
+    super(app, inputEl);
+    this.inputEl = inputEl;
+  }
+
+  /**
+   * Grabs every folder location currently residing inside the vault
+   */
+  getSuggestions(inputStr: string): string[] {
+    const files = this.app.vault.getAllLoadedFiles();
+    const folderPaths: string[] = ["/"]; // Always provide the root catalog option
+
+    files.forEach((file) => {
+      // @ts-expect-error - children array natively targets folder objects
+      if (file.children && !file.path.startsWith(".")) {
+        folderPaths.push(file.path);
+      }
+    });
+
+    // Unique sort and run a loose lowercase text query match loop
+    const searchLower = inputStr.toLowerCase().trim();
+    return Array.from(new Set(folderPaths))
+      .filter((folder) => folder.toLowerCase().includes(searchLower))
+      .sort((a, b) => (a === "/" ? -1 : b === "/" ? 1 : a.localeCompare(b)));
+  }
+
+  /**
+   * Controls how the text string displays inside the dropdown suggestion box row
+   */
+  renderSuggestion(value: string, el: HTMLElement): void {
+    el.setText(value === "/" ? "/ (Root Vault Directory)" : value);
+  }
+
+  /**
+   * Executes when the user clicks or hits Enter on a dropdown item
+   */
+  selectSuggestion(value: string): void {
+    this.inputEl.value = value;
+    this.inputEl.dispatchEvent(new Event("input")); // Force Obsidian to register the value mutation
+    this.close();
+  }
+}
+
+import { TFile } from "obsidian";
+
+export class AudioFileSuggest extends AbstractInputSuggest<TFile> {
+  private inputEl: HTMLInputElement;
+
+  constructor(app: App, inputEl: HTMLInputElement) {
+    super(app, inputEl);
+    this.inputEl = inputEl;
+  }
+
+  /**
+   * Scans and filters the vault for audio assets matching the user's typed input string.
+   */
+  getSuggestions(inputStr: string): TFile[] {
+    const files = this.app.vault.getFiles();
+    const searchLower = inputStr.toLowerCase().trim();
+    const validExtensions = ["mp3", "wav", "ogg", "m4a", "flac"];
+
+    return files.filter((file) => {
+      const matchesSearch = file.path.toLowerCase().includes(searchLower);
+      const hasAudioExtension = validExtensions.includes(
+        file.extension.toLowerCase(),
+      );
+      return matchesSearch && hasAudioExtension;
+    });
+  }
+
+  /**
+   * Formats how each audio track line choice renders in the autocomplete suggestion list.
+   */
+  renderSuggestion(file: TFile, el: HTMLElement): void {
+    el.setText(file.path);
+  }
+
+  /**
+   * Fires when a user clicks a song file, populating the setting text container.
+   */
+  selectSuggestion(file: TFile): void {
+    this.inputEl.value = file.path;
+    this.inputEl.dispatchEvent(new Event("input")); // Forces Obsidian data to sync instantly
+    this.close();
   }
 }

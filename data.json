@@ -1,0 +1,13 @@
+{
+  "audioFolder": "Jukebox",
+  "weatherOverlays": [
+    {
+      "name": "🌧️ Rain",
+      "filePath": "Jukebox/Ambience/Soft_Rain.mp3"
+    },
+    {
+      "name": "⛈️ Storm",
+      "filePath": "Jukebox/Ambience/Heavy_Storm.wav"
+    }
+  ]
+}
