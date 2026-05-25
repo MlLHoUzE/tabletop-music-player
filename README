@@ -1,23 +1,99 @@
-# TTRPG Background Music Player (Obsidian Plugin)
+# Obsidian TTRPG Background Music Player
 
-A compact, zero-friction audio controller designed for running live TTRPG sessions from a centralized session prep note. It decouples audio logic from the UI views to maintain persistent background playback while navigating separate notes, NPC sheets, and stat blocks.
+A lightweight, zero-friction audio controller for Obsidian.md designed specifically for Game Masters who run sessions from a centralized campaign prep note. It decouples the HTML5 audio thread from the user interface, maintaining persistent background playback while you jump between separate note logs, NPC sheets, and monster stat blocks.
 
-## Core Features
+Features crossfade transitions, a dual-channel mixer for weather layers, custom inline note link buttons, and an autocompleting, configurable folder structure.
 
-- **Persistent Playback**: Decoupled HTML5 audio architecture continues playing in the background when active notes are switched or closed.
-- **Dual-Channel Crossfading**: Automatically blends track transitions smoothly over a 2.5-second cinematic window.
-- **Dual-Channel Mixer**: Independent volume tracking sliders for the main Music track and looping Environmental Weather layers.
-- **Tactical Filter Matrix**: 13-button compact grid targeting **Biome**, **Tone**, and **Intensity** properties.
-- **Automated Queues**: Property filters automatically apply a Fisher-Yates random shuffle to matching tracks; hardcoded playlist notes play strictly in order.
-- **Inline Click-to-Play**: Markdown post-processor transforms custom URIs into functional text buttons natively within your prep notes.
-- **Global Hotkeys**: Registers core actions (`Play`, `Pause`, `Skip`, `Panic Stop`) into Obsidian's native Hotkey manager.
-- **Performance Scoped**: Scans are bounded strictly to a root folder named `Jukebox/` to maintain lightning-fast execution in large vaults.
+---
 
-## Development Setup
+## 🎧 Core Features
 
-1. Overwrite your `package.json` with the required compilation libraries (`esbuild`, `typescript`).
-2. Run `npm install` to download dependencies.
-3. Update the `package.json` output path script to point straight to your active vault:
-   `--outfile="C:/YourVault/.obsidian/plugins/obsidian-ttrpg-music/main.js"`
-4. Execute `npm run dev` to watch your workspace and auto-compile on save.
-5. Hit `Ctrl + R` inside Obsidian to flush the layout and update active logic.
+- **Persistent Playback:** Background audio thread continues looping seamlessly when notes or sidebar panes are switched or closed.
+- **Cinematic Crossfading:** Intercepts track shifts and overlays sound transitions using an adjustable blending window (Defaults to 2.5s).
+- **Dual-Channel Mixing Panel:** Independent volume adjustment sliders for the core Music playlist and looping Environmental Weather layers.
+- **Tactical Filter Matrix:** A tightly packed button grid targeting **Biome**, **Tone**, and **Intensity** properties embedded in note front matter.
+- **Scene Retention Loops:** Tracks loop continuously upon natural ending. Music changes are strictly restricted to manual skip button presses, inline notes, or hotkeys.
+- **Inline Click-to-Play Links:** Custom markdown post-processor transforms special URI targets into tactile, interactive media execution buttons directly inside your reading or live-preview prep text.
+- **Searchable Autocomplete Settings:** Leverages Obsidian's native Suggester APIs to provide search-filterable inputs for choosing root directories and weather audio paths.
+- **Zero-Footprint Global Hotkeys:** Registers global commands (`Play`, `Pause`, `Skip`, `Panic Stop`) that can be mapped to blank custom keyboard layout combinations out-of-the-box.
+
+---
+
+## 🎮 Interface Architecture
+
+To save screen real estate for your campaign prep text, the sidebar panel is engineered into a tightly packed, zero-whitespace grid containing the following control sections:
+
+1. **Now Playing Card:** A single-line layout reporting the active track name currently running in the audio engine cache.
+2. **Media Control Row:** Quick buttons to Play, Pause, or Skip to the next matched track in your queue.
+3. **Live Mixing Panel:** Dual-slider volume inputs for managing Music and Weather levels independently.
+4. **Search Matrix:** Grid button selections for **Biomes** (*Forest, Marine, Highlands, Dungeon, Settlement*), **Tones** (*Calm, Mysterious, Tense, Epic, Spooky*), and **Intensity** (*Low, Medium, High*).
+5. **Weather Overlays:** Configurable looping environmental backdrops (*Clear, Rain, Storm*, or user-defined audio toggles).
+6. **Playlist Notes:** An autocomplete-friendly input box to type and launch customized sequential adventure albums.
+
+---
+
+## 📋 Metadata & Data Structuring
+
+To optimize scanning performance in large vaults, your music notes and hardcoded playlist files should sit under your chosen **Audio Folder Root Location** specified in the settings tab.
+
+### 1. Standalone Track Note
+Create a `.md` card inside your music folder for each track asset. The player uses standard YAML parameters to query and shuffle selections:
+
+```markdown
+---
+file_path: Jukebox/Audio/Music/Misty_Isles_Theme.mp3
+biome: Marine
+tone: Mysterious
+intensity: Low
+---
+```
+
+### 2. Handcrafted Sequential Playlist Note
+To create multi-phase battle scores or continuous themes that play in an exact order, configure a custom playlist file. These **never shuffle**; they track your path linearly and cycle back to track 1 when finished.
+
+```markdown
+---
+type: playlist
+playlist_id: dragon-fight
+paths:
+  - Jukebox/Audio/Music/Intro_Roar.mp3
+  - Jukebox/Audio/Music/Combat_Phase_1.mp3
+  - Jukebox/Audio/Music/Combat_Phase_2.wav
+  - Jukebox/Audio/Music/Victory_Fanfare.mp3
+---
+```
+
+---
+
+## ⚡ Interactive Inline Commands
+
+Keep your mouse cursor inside your adventure notes during play. You can trigger tracks and custom playlist IDs natively right out of your lore parameters using standard markdown formatting:
+
+- **Trigger a sequential playlist note:** `[⚔️ Boss Battle](ttrpg-music:playlist:dragon-fight)`
+- **Trigger a standalone isolated track path:** `[🕵️ Stealth Cue](ttrpg-music:track:Jukebox/Audio/Music/Suspense_Drone.mp3)`
+
+---
+
+## 🛠️ Installation & Building
+
+### Manual Installation
+1. Navigate to your vault's hidden plugin directory: `.obsidian/plugins/`
+2. Create a folder named `obsidian-ttrpg-music`
+3. Download and move the three final compiled production assets (`main.js`, `manifest.json`, `styles.css`) from our GitHub Releases panel directly into that folder.
+4. Open Obsidian $\rightarrow$ Settings $\rightarrow$ Community Plugins $\rightarrow$ Reload, and toggle the plugin **On**.
+
+### Local Development Compilation
+Clone this repository locally to build or tweak features:
+```bash
+# Install tool configurations and compilers
+npm install
+
+# Run the live esbuild watcher to hot-compile changes on save
+npm run dev
+
+# Run a code quality lint check
+npm run lint
+
+# Compile a minimized, production-ready release
+npm run build
+```
