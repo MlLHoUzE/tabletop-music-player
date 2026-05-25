@@ -1,4 +1,4 @@
-# Obsidian TTRPG Background Music Player
+# Obsidian TTRPG Music Player
 
 A lightweight, zero-friction audio controller for Obsidian.md designed specifically for Game Masters who run sessions from a centralized campaign prep note. It decouples the HTML5 audio thread from the user interface, maintaining persistent background playback while you jump between separate note logs, NPC sheets, and monster stat blocks.
 

@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-ttrpg-music",
+  "name": "obsidian-ttrpg-music-player",
   "version": "1.0.0",
-  "description": "TTRPG background audio controller with front matter filtering.",
+  "description": "TTRPG audio controller with front matter filtering.",
   "main": "main.js",
   "scripts": {
     "dev": "esbuild main.ts --bundle --outfile=main.js --watch --external:obsidian --format=cjs --minify=false",
