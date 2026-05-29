@@ -63,17 +63,18 @@
   margin-left: 4px;
 }
 
-/* Remove wasted white space above headers */
+/* SPECIFICITY UPGRADE: Target through the parent container to safely drop !important 🪄 */
 .ttrpg-view-container h5 {
-  margin: 8px 0 4px 0 !important;
+  margin: 8px 0 4px 0;
   font-size: 0.8em;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-normal);
 }
 
-.ttrpg-divider-spaced {
-  margin: 8px 0 !important;
+/* SPECIFICITY UPGRADE: Target through the parent container to safely drop !important 🪄 */
+.ttrpg-view-container .ttrpg-divider-spaced {
+  margin: 8px 0;
   border: 0;
   border-top: 1px solid var(--background-modifier-border);
 }
@@ -130,24 +131,25 @@
   font-size: 0.85em;
 }
 
-/* Style custom music links as sleek, interactive inline buttons */
-a.ttrpg-inline-command-btn {
+/* SPECIFICITY UPGRADE: Chain the class names together twice to easily override 
+   Obsidian theme link colors without relying on !important 🔊 */
+a.ttrpg-inline-command-btn.ttrpg-inline-command-btn {
   display: inline-flex;
   align-items: center;
   background-color: var(--background-secondary-alt);
-  color: var(--text-accent) !important;
+  color: var(--text-accent);
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   padding: 2px 6px;
   margin: 0 2px;
   font-size: 0.9em;
   font-weight: 500;
-  text-decoration: none !important;
+  text-decoration: none;
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
-a.ttrpg-inline-command-btn:hover {
+a.ttrpg-inline-command-btn.ttrpg-inline-command-btn:hover {
   background-color: var(--background-modifier-hover);
-  color: var(--text-accent-hover) !important;
+  color: var(--text-accent-hover);
 }
