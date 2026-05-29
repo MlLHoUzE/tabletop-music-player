@@ -43,19 +43,45 @@ export class TrackManager {
         return String(val).trim();
       };
 
-      const noteBiome = getCompareStr(frontmatter.biome);
-      const noteTone = getCompareStr(frontmatter.tone);
       const noteIntensity = getCompareStr(frontmatter.intensity);
 
-      if (filters.biome && noteBiome !== filters.biome.toLowerCase())
+      const rawBiome = frontmatter.biome;
+      let noteBiomesArray: string[] = [];
+
+      if (Array.isArray(rawBiome)) {
+        noteBiomesArray = rawBiome.map((t) => getCompareStr(t));
+      } else if (rawBiome) {
+        noteBiomesArray = [getCompareStr(rawBiome)];
+      }
+
+      const rawTone = frontmatter.tone;
+      let noteTonesArray: string[] = [];
+
+      if (Array.isArray(rawTone)) {
+        noteTonesArray = rawTone.map((t) => getCompareStr(t));
+      } else if (rawTone) {
+        noteTonesArray = [getCompareStr(rawTone)];
+      }
+
+      if (
+        filters.biome &&
+        !noteBiomesArray.includes(filters.biome.toLowerCase())
+      ) {
         matchesAll = false;
-      if (filters.tone && noteTone !== filters.tone.toLowerCase())
-        matchesAll = false;
+      }
       if (
         filters.intensity &&
         noteIntensity !== filters.intensity.toLowerCase()
-      )
+      ) {
         matchesAll = false;
+      }
+
+      if (
+        filters.tone &&
+        !noteTonesArray.includes(filters.tone.toLowerCase())
+      ) {
+        matchesAll = false;
+      }
 
       if (matchesAll) {
         const cleanPath = getExactPathStr(frontmatter.file_path);

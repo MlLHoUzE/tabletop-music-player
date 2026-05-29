@@ -7,7 +7,7 @@ export class TTRPGMusicView extends ItemView {
 
   // Hardcoded tactical values for instant gameplay buttons
   private biomes = ["Forest", "Marine", "Highlands", "Dungeon", "Settlement"];
-  private tones = ["Calm", "Mysterious", "Tense", "Epic", "Spooky"];
+  private tones = ["Calm", "Mysterious", "Tense", "Epic", "Spooky", "Somber"];
   private intensities = ["Low", "Medium", "High"];
 
   private selectedBiome: string | null = null;
